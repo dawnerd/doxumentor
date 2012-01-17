@@ -1,0 +1,18 @@
+{
+  "author": "Troy Whiteley <troy@somanyscientists.com>",
+  "name": "doxumentor",
+  "description": "A documentation page builder for Dox.",
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dawnerd/doxumentor.git"
+  },
+  "engines": {
+    "node": "~0.6.7"
+  },
+  "dependencies": {
+    "dox": "0.1.3",
+    "commander": "0.5.1"
+  },
+  "devDependencies": {}
+}
