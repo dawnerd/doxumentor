@@ -1,0 +1,17 @@
+!!!
+html
+  head
+    title Documentation for #{fileName}
+  body
+    h1 #{fileName}
+    h6 Located in: #{fileParts.join('/')}
+
+    div.description !{data[0].description.full}
+
+    code
+      pre !{data[0].code}
+
+    script
+      var data = !{JSON.stringify(data)};
+      var fileParts = '!{fileParts}'.split(',');
+      var fileName = '!{fileName}';

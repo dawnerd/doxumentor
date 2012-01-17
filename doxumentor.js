@@ -1,6 +1,7 @@
 var dox = require('dox'),
     fs = require('fs'),
-    program = require('commander');
+    program = require('commander'),
+    jade = require('jade');
 
 
 program
@@ -22,6 +23,9 @@ fs.stat(program.output, function(err, stat) {
     process.exit(code=0);
   }
 });
+
+var template = program.template || './template.jade';
+var templateFile = fs.readFileSync(template, 'utf8');
 
 var walk = function(dir, done) {
   var results = [];
@@ -51,7 +55,52 @@ var parseFile = function(file) {
     if (err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) return;
     console.log('Parsing: ' + file);
     var obj = dox.parseComments(data);
-    console.log(obj)
+
+    var outputFile = file.replace(program.input, program.output).replace(/(\.js)|(\.css)/, '.html');
+    var fileParts = require('path').normalize(outputFile.replace(program.output, '')).split('/');
+
+    var fn = jade.compile(templateFile, {
+      filename: template
+    });
+
+    var outputHTML = fn({
+      fileParts: fileParts,
+      fileName: fileParts[fileParts.length-1],
+      data: obj
+    });
+
+    mkdir(outputFile, function(){
+      fs.writeFile(outputFile, outputHTML, 'utf8', function(err) {
+        if (err) throw err;
+        console.log(outputFile);
+      });
+    });
+  });
+};
+
+//custom mkdir for mkdir -p
+var mkdir = function(path, callback, position) {
+  var parts = require('path').normalize(path).split('/');
+
+  position = position || 0;
+
+  if (position >= parts.length-1) {
+    return callback();
+  }
+
+  var directory = parts.slice(0, position + 1).join('/') || '/';
+  fs.stat(directory, function(err, stat) {    
+    if (stat && (stat.isFile() || stat.isDirectory())) {
+      mkdir(path, callback, position+1);
+    } else {
+      fs.mkdir(directory, function (err) {
+        if (err && err.errno !== 17) {
+          return callback(err);
+        } else {
+          mkdir(path, callback, position+1);
+        }
+      });
+    }
   });
 };
 
