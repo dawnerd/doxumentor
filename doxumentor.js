@@ -1,7 +1,12 @@
+#!/usr/bin/env node
+
 var dox = require('dox'),
-    fs = require('fs'),
+    fs = require('graceful-fs'),
     program = require('commander'),
     jade = require('jade');
+
+//lower the max open as default is too high.
+fs.MAX_OPEN = 100;
 
 
 program
@@ -11,6 +16,15 @@ program
   .option('-t, --template [path]', 'Template file')
   .parse(process.argv);
 
+if(!program.input) {
+  console.log('Please supply an input');
+  process.exit(code=0);
+}
+
+if(!program.output) {
+  console.log('Please supply an output directory');
+  process.exit(code=0);
+}
 
 console.log('Using input: ' + program.input);
 console.log('Using output dir: ' + program.output);
