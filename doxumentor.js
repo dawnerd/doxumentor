@@ -41,6 +41,10 @@ fs.stat(program.output, function(err, stat) {
 var template = program.template || './template.jade';
 var templateFile = fs.readFileSync(template, 'utf8');
 
+var totalFiles = 0,
+    processedFiles = 0,
+    start_time = +new Date;
+
 var walk = function(dir, done) {
   var results = [];
   fs.readdir(dir, function(err, list) {
@@ -66,7 +70,10 @@ var walk = function(dir, done) {
 
 var parseFile = function(file) {
   fs.readFile(file, 'utf8', function (err, data) {
-    if (err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) return;
+    if (err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) {
+      totalFiles--;
+      return;
+    }
     console.log('Parsing: ' + file);
     var obj = dox.parseComments(data);
 
@@ -87,6 +94,12 @@ var parseFile = function(file) {
       fs.writeFile(outputFile, outputHTML, 'utf8', function(err) {
         if (err) throw err;
         console.log('Generated: ' + outputFile);
+        processedFiles++;
+
+        if(totalFiles === processedFiles) {
+          var end_time = +new Date;
+          console.log('Finished parsing ' + totalFiles + ' files in ' + (end_time-start_time)/1000 + ' seconds');
+        }
       });
     });
   });
@@ -120,5 +133,6 @@ var mkdir = function(path, callback, position) {
 
 walk(program.input, function(err, results) {
   if (err) throw err;
+  totalFiles = results.length;
   results.forEach(parseFile);
 });
