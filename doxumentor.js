@@ -86,7 +86,7 @@ var parseFile = function(file) {
     mkdir(outputFile, function(){
       fs.writeFile(outputFile, outputHTML, 'utf8', function(err) {
         if (err) throw err;
-        console.log(outputFile);
+        console.log('Generated: ' + outputFile);
       });
     });
   });
