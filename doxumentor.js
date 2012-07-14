@@ -1,63 +1,97 @@
 #!/usr/bin/env node
 
-var dox = require('dox'),
-    fs = require('graceful-fs'),
-    program = require('commander'),
-    jade = require('jade');
+/**
+ * Doxumentor
+ * Copyright Troy Whiteley
+ *
+ * Take control of your documentation!
+ *
+ * Doxumentor is a documentation page generator
+ * using dox as the backend of parsing code.
+ */
 
-//lower the max open as default is too high.
+var dox = require('dox'),
+  fs = require('graceful-fs'),
+  program = require('commander'),
+  jade = require('jade'),
+  colors = require('colors');
+
+// Lower the max open as default is too high.
 fs.MAX_OPEN = 100;
 
-
+// Setup program options.
 program
-  .version('0.0.0')
+  .version('0.1.1')
   .option('-i, --input <path>', 'Input file or directory')
   .option('-o, --output <path>', 'Output Directory')
   .option('-t, --template [path]', 'Template file')
   .parse(process.argv);
 
+// Check input.
 if(!program.input) {
-  console.log('Please supply an input');
+  console.log('Please supply an input directory'.red);
   process.exit(code=0);
 }
 
+// Check output.
 if(!program.output) {
-  console.log('Please supply an output directory');
+  console.log('Please supply an output directory'.red);
   process.exit(code=0);
 }
 
-console.log('Using input: ' + program.input);
-console.log('Using output dir: ' + program.output);
-if(program.template) console.log('Using template: ' + program.template);
 
-fs.stat(program.output, function(err, stat) {
+console.log('Using input: '.green + program.input);
+console.log('Using output dir: '.green + program.output);
+
+// Check template
+if(program.template) {
+  console.log('Using template: '.green + program.template);
+}
+
+// Check if input is a real directory.
+fs.stat(program.input, function(err, stat) {
   if(!stat || !stat.isDirectory()) {
     console.log('');
-    console.log(program.output + ' is not a directory.')
+    console.log(program.input.red + ' is not a directory.'.red);
     process.exit(code=0);
   }
 });
 
-var template = program.template || './template.jade';
-var templateFile = fs.readFileSync(template, 'utf8');
 
-var totalFiles = 0,
-    processedFiles = 0,
-    start_time = +new Date;
+// Check if output is a real directory.
+fs.stat(program.output, function(err, stat) {
+  if(!stat || !stat.isDirectory()) {
+    console.log('');
+    console.log(program.output.red + ' is not a directory.'.red);
+    process.exit(code=0);
+  }
+});
 
-var walk = function(dir, done) {
+var template = program.template || './template.jade',
+  templateFile = fs.readFileSync(template, 'utf8'),
+  totalFiles = 0,
+  processedFiles = 0,
+  start_time = +new Date();
+
+/**
+ * Recursively reads files in a directory.
+ * 
+ * @param  {String}   dir  Directory to read.
+ * @param  {Function} done Callback when a directory is finished.
+ */
+var walk = function walk(dir, done) {
   var results = [];
   fs.readdir(dir, function(err, list) {
-    if (err) return done(err);
+    if(err) return done(err);
     var pending = list.length;
-    if (!pending) return done(null, results);
+    if(!pending) return done(null, results);
     list.forEach(function(file) {
       file = dir + '/' + file;
       fs.stat(file, function(err, stat) {
-        if (stat && stat.isDirectory()) {
+        if(stat && stat.isDirectory()) {
           walk(file, function(err, res) {
             results = results.concat(res);
-            if (!--pending) done(null, results);
+            if(!--pending) done(null, results);
           });
         } else {
           results.push(file);
@@ -68,17 +102,24 @@ var walk = function(dir, done) {
   });
 };
 
-var parseFile = function(file) {
+/**
+ * Reads a file and runs it through dox and generates HTML
+ * by using Jade.
+ * 
+ * @param  {String} file Filename.
+ * @todo  Could use some cleanup.
+ */
+var parseFile = function parseFile(file) {
   fs.readFile(file, 'utf8', function (err, data) {
-    if (err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) {
+    if(err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) {
       totalFiles--;
       return;
     }
-    console.log('Parsing: ' + file);
-    var obj = dox.parseComments(data);
+    console.log('Parsing: '.green + file);
 
-    var outputFile = file.replace(program.input, program.output).replace(/(\.js)|(\.css)/, '.html');
-    var fileParts = require('path').normalize(outputFile.replace(program.output, '')).split('/');
+    var obj = dox.parseComments(data),
+      outputFile = file.replace(program.input, program.output).replace(/(\.js)|(\.css)/, '.html'),
+      fileParts = require('path').normalize(outputFile.replace(program.output, '')).split('/');
 
     var fn = jade.compile(templateFile, {
       filename: template
@@ -93,20 +134,26 @@ var parseFile = function(file) {
     mkdir(outputFile, function(){
       fs.writeFile(outputFile, outputHTML, 'utf8', function(err) {
         if (err) throw err;
-        console.log('Generated: ' + outputFile);
+        console.log('Generated: '.green + outputFile);
         processedFiles++;
 
         if(totalFiles === processedFiles) {
-          var end_time = +new Date;
-          console.log('Finished parsing ' + totalFiles + ' files in ' + (end_time-start_time)/1000 + ' seconds');
+          var end_time = +new Date();
+          console.log(('Finished parsing ' + totalFiles + ' '+ (totalFiles===1?'file':'files') +' in ' + ((end_time-start_time)/1000) + ' seconds').blue);
         }
       });
     });
   });
 };
 
-//custom mkdir for mkdir -p
-var mkdir = function(path, callback, position) {
+/**
+ * Custom mkdir that mimicks mkdir -p
+ *
+ * @param  {String}   path     Path to create.
+ * @param  {Function} callback Callback when directory created.
+ * @param  {[type]}   position Position is mkdir -p chain
+ */
+var mkdir = function mkdir(path, callback, position) {
   var parts = require('path').normalize(path).split('/');
 
   position = position || 0;
@@ -131,6 +178,7 @@ var mkdir = function(path, callback, position) {
   });
 };
 
+// Run the app!
 walk(program.input, function(err, results) {
   if (err) throw err;
   totalFiles = results.length;
