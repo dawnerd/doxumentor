@@ -25,6 +25,7 @@ program
   .option('-i, --input <path>', 'Input file or directory')
   .option('-o, --output <path>', 'Output Directory')
   .option('-t, --template [path]', 'Template file')
+  .option('--css', 'Parse CSS files')
   .parse(process.argv);
 
 // Check input.
@@ -111,7 +112,7 @@ var walk = function walk(dir, done) {
  */
 var parseFile = function parseFile(file) {
   fs.readFile(file, 'utf8', function (err, data) {
-    if(err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1)) {
+    if(err || (file.indexOf('.js') === -1 && file.indexOf('.css') === -1) || ((file.indexOf('.css') !== -1) && !program.css)) {
       totalFiles--;
       return;
     }
