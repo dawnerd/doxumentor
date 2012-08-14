@@ -3,7 +3,7 @@
   "name": "doxumentor",
   "description": "A documentation page builder for Dox.",
   "keywords": ["documentation", "docs", "markdown", "jsdoc"],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "bin": { "doxumentor": "./doxumentor.js" },
   "repository": {
     "type": "git",
