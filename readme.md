@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/dawnerd/doxumentor.png)](http://travis-ci.org/dawnerd/doxumentor)
 # doxumentor
 ## Take control of your documentation!
 
