@@ -40,4 +40,4 @@ Doxumentor doesn't just support javascript. It can also scan and parse CSS files
 
 ### Further Reading
 
-For more information how documenting your code, please checkout [the dox documentation](https://github.com/visionmedia/dox/).
+For more information how to document your code, please checkout [the dox documentation](https://github.com/visionmedia/dox/).
